@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="refactor,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="最近在公司做專案的重構，雖然是個小專案，但是第一次做線上服務的重構，有一些小小心得(aka踩雷紀錄)想來分享一下。">
+<meta name="keywords" content="refactor">
+<meta property="og:type" content="article">
+<meta property="og:title" content="近期重構心得">
+<meta property="og:url" content="https://blog.plusku.net/2020/08/26/refactor-tips/index.html">
+<meta property="og:site_name" content="Plusku@blog">
+<meta property="og:description" content="最近在公司做專案的重構，雖然是個小專案，但是第一次做線上服務的重構，有一些小小心得(aka踩雷紀錄)想來分享一下。">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2021-07-29T14:53:29.375Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="近期重構心得">
+<meta name="twitter:description" content="最近在公司做專案的重構，雖然是個小專案，但是第一次做線上服務的重構，有一些小小心得(aka踩雷紀錄)想來分享一下。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://blog.plusku.net/2020/08/26/refactor-tips/">
+
+
+
+
+
+  <title>近期重構心得 | Plusku@blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Plusku@blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">en/zh-tw</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://blog.plusku.net/2020/08/26/refactor-tips/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="plusku">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/avatars/ika.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Plusku@blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">近期重構心得</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-08-26T23:32:08+08:00">
+                2020-08-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>最近在公司做專案的重構，雖然是個小專案，但是第一次做線上服務的重構，有一些小小心得(aka踩雷紀錄)想來分享一下。</p>
+<a id="more"></a>
+<h3 id="想清楚再動手"><a href="#想清楚再動手" class="headerlink" title="想清楚再動手"></a>想清楚再動手</h3><blockquote>
+<p>慢慢來，比較快</p>
+</blockquote>
+<p>把整個專案的架構、介面、部署、向下相容、任務分割都想清楚了規劃好了再開始寫code，一步到位最快。<br>這個算是我的老毛病了，雖然知道想清楚再寫比較快，但我是動了才會開始有想法的人，總擺脫不了修修改改的命。我認為主因是經驗不夠，不知道最短路徑就得花時間試錯，但金魚腦如我怕忘了所以來寫blog記錄個。</p>
+<h3 id="保持程式碼品質"><a href="#保持程式碼品質" class="headerlink" title="保持程式碼品質"></a>保持程式碼品質</h3><blockquote>
+<p>不要為了求快降低程式碼品質、留下技術債</p>
+</blockquote>
+<p>對我來說有點像是上一點的延伸，因為覺得只是try and error，之後還會回來動就苟且了一下，結果那部分就一直留下來了，變得我要做重構的重構orz<br>有幾個方向:</p>
+<ol>
+<li><p>code smell</p>
+<p> 基本上就是clean code說過的，基本的SOLID、Naming，進階一點的DI等等，都有達成至少後續要動不會那麼辛苦。</p>
+</li>
+<li><p>unittest</p>
+<p> 有帶測試的code才是完整的code，沒有測試怎麼知道功能對不對，沒有測試怎麼知道boundary和副作用，沒有測試怎麼知道有沒有改壞了，沒有測試怎麼知道你的code寫得多爛。</p>
+<p> 除了保護功能正常以外，好測的code通常也比較少bad smell，所以盡可能寫上測試吧！</p>
+<p> (以TDD的精神應該要先寫測試再寫功能才對)</p>
+</li>
+<li><p>git tree</p>
+<p> 不管用哪種flow都要好好遵守，為了金魚腦的自己好好寫commit message，之後要追bug或有人想來幫忙才不會無從下手。</p>
+</li>
+<li><p>文件</p>
+<p> 就算你過目不忘，專案也需要分別人看，更別提金魚腦的我了。</p>
+<p> 所以為了隊友以及未來的自己，盡量保持文件在最新狀態，寫得愈清楚愈好。以我來說，在merge前會檢查一次。</p>
+<p> (如果已經做好規劃，相信多寫個文件也不會太麻煩)(但我沒有)</p>
+</li>
+</ol>
+<h3 id="保持功能相同"><a href="#保持功能相同" class="headerlink" title="保持功能相同"></a>保持功能相同</h3><blockquote>
+<p>線上的功能才是正確的功能</p>
+</blockquote>
+<p>不要覺得是廢話，你應該也有看過線上功能有一些bug吧？ 不!! 要!! 修!!!!<br>要修也要等重構完成上線後，現在修了怎麼知道算出來的結果不同是因為bug修好了還是因為寫錯？所以不要雞婆的修，把它記錄下來。<br>怎麼確認功能相同呢，直接帶線上資料與參數去跑，不管結果正不正確，跟線上一樣就是對的。<br>(如果線上沒有測試呢? 標準答案是補測試，但)</p>
+<h3 id="注意進度"><a href="#注意進度" class="headerlink" title="注意進度"></a>注意進度</h3><blockquote>
+<p>重構沒有任何產值，重構的效益在未來的開發與維運</p>
+</blockquote>
+<p>除非像我一樣閒得發慌，沒有進度壓力佛系開發，否則一般老闆不會放你在做0產值的事，把要做的事列出來按重要度排序吧。我會把要做的事記在文件裡給未來的我看。</p>
+<h3 id="重構的意義"><a href="#重構的意義" class="headerlink" title="重構的意義"></a>重構的意義</h3><blockquote>
+<p>其實不需要重構</p>
+</blockquote>
+<p>我滿常遇到一種情況是投入很多心力，也有做出成果，但實際上對現況沒有太大幫助，雖然不是徒勞無功，但就是CP值不太高。<br>工作後的最大體悟，有很多事要做，但資源有限，所以只能從效益最大的事開始做。<br>上一點說過重構沒有任何產值，所以重構通常只能排在後面，但反過來想，重構的未來價值真的夠大嗎？如果已經是很穩定也很少變動的專案，就算是一個巨大的main又如何，一年說不定動不到一次，只是小改也不會動到太多，那投資許多時間(aka最貴的資源)去做真的划算嗎？等真的需要大改時再重構是不是也不遲。<br>所以回到第一點，想清楚再動手。</p>
+<p>以上，做了兩個月的重構，專案準備要上線前的小小心得。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/refactor/" rel="tag"># refactor</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/08/09/travis-ci-to-github-actions/" rel="next" title="把Travis CI換成Github Actions">
+                <i class="fa fa-chevron-left"></i> 把Travis CI換成Github Actions
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/10/01/blog-change-domain/" rel="prev" title="blog換網址">
+                blog換網址 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/avatars/ika.jpg" alt="plusku">
+            
+              <p class="site-author-name" itemprop="name">plusku</p>
+              <p class="site-description motion-element" itemprop="description">Taiwanese engineer</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/plusku" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#想清楚再動手"><span class="nav-number">1.</span> <span class="nav-text">想清楚再動手</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#保持程式碼品質"><span class="nav-number">2.</span> <span class="nav-text">保持程式碼品質</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#保持功能相同"><span class="nav-number">3.</span> <span class="nav-text">保持功能相同</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#注意進度"><span class="nav-number">4.</span> <span class="nav-text">注意進度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#重構的意義"><span class="nav-number">5.</span> <span class="nav-text">重構的意義</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">plusku</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

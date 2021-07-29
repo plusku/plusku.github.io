@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="docker,hexo,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="雖然我已經串好travis-ci，理論上我只要寫好markdown再push就好，但我又懶得去對post的格式。我其實只需要跑hexo new &amp;lt;title&amp;gt;這個指令，但因為沒在寫nodejs，實在不想為了寫hexo裝nodejs。剛好最近看很多Dockerfile，不然來練習一下吧！">
+<meta name="keywords" content="docker,hexo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在docker中執行hexo">
+<meta property="og:url" content="https://blog.plusku.net/2020/08/08/docker-hexo/index.html">
+<meta property="og:site_name" content="Plusku@blog">
+<meta property="og:description" content="雖然我已經串好travis-ci，理論上我只要寫好markdown再push就好，但我又懶得去對post的格式。我其實只需要跑hexo new &amp;lt;title&amp;gt;這個指令，但因為沒在寫nodejs，實在不想為了寫hexo裝nodejs。剛好最近看很多Dockerfile，不然來練習一下吧！">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2021-07-29T14:53:29.375Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="在docker中執行hexo">
+<meta name="twitter:description" content="雖然我已經串好travis-ci，理論上我只要寫好markdown再push就好，但我又懶得去對post的格式。我其實只需要跑hexo new &amp;lt;title&amp;gt;這個指令，但因為沒在寫nodejs，實在不想為了寫hexo裝nodejs。剛好最近看很多Dockerfile，不然來練習一下吧！">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://blog.plusku.net/2020/08/08/docker-hexo/">
+
+
+
+
+
+  <title>在docker中執行hexo | Plusku@blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Plusku@blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">en/zh-tw</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://blog.plusku.net/2020/08/08/docker-hexo/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="plusku">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/avatars/ika.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Plusku@blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">在docker中執行hexo</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-08-08T19:31:08+08:00">
+                2020-08-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>雖然我已經串好travis-ci，理論上我只要寫好markdown再push就好，但我又懶得去對post的格式。<br>我其實只需要跑<code>hexo new &lt;title&gt;</code>這個指令，但因為沒在寫nodejs，實在不想為了寫hexo裝nodejs。<br>剛好最近看很多Dockerfile，不然來練習一下吧！</p>
+<a id="more"></a>
+<p>首先我需要一個基底，隨便挑個最低要求的nodejs 10<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">FROM node:10</span><br></pre></td></tr></table></figure></p>
+<p>再來安裝hexo<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RUN npm install hexo-cli -g</span><br></pre></td></tr></table></figure></p>
+<p>設定放blog的位置<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">WORKDIR /home/blog</span><br></pre></td></tr></table></figure></p>
+<p>用bash當作進入點<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ENTRYPOINT [&quot;/bin/bash&quot;]</span><br></pre></td></tr></table></figure></p>
+<p>然後build image<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t hexo .</span><br></pre></td></tr></table></figure></p>
+<p>收工。</p>
+<p>但是我只想要跑<code>hexo new &lt;title&gt;</code>，不想要每次都還要進bash啊，<br>所以我寫了個script<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">if [ &quot;$#&quot; -eq &quot;0&quot; ]</span><br><span class="line">then</span><br><span class="line">    /bin/bash</span><br><span class="line">else</span><br><span class="line">    hexo $@</span><br><span class="line">fi</span><br></pre></td></tr></table></figure></p>
+<p>讓他不帶參數時進bash，帶參數時直接執行hexo</p>
+<p>Dockerfile也要修改一下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">COPY entrypoint.sh /home</span><br><span class="line">ENTRYPOINT [&quot;sh&quot;, &quot;/home/entrypoint.sh&quot;]</span><br></pre></td></tr></table></figure></p>
+<p>收工！</p>
+<p>只要執行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --rm -v ~/blog:/home/blog hexo new &lt;title&gt;</span><br></pre></td></tr></table></figure></p>
+<p>記得把本機放blog的資料夾掛上才能在container外寫markdown啊！</p>
+<p>但事情還沒結束，看一下生出來的檔案的時間對不太上，剛好差了8小時，<br>轉一下時區<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --rm -e &quot;TZ=Asia/Taipei&quot; -v ~/blog:/home/blog hexo new &lt;title&gt;</span><br></pre></td></tr></table></figure></p>
+<p>嗯嗯，這樣總該沒問題了吧。</p>
+<p><strong>然而並沒有</strong></p>
+<p>透過container生出來的檔案權限都是root！<br>在container外的我只是普通使用者啊，這樣沒辦法編輯啊。<br>google一下，這果然是老問題: <a href="https://vsupalov.com/docker-shared-permissions/" target="_blank" rel="noopener">Avoiding Permission Issues With Docker-Created Files</a><br>身為一個認真的工程師(?)，當然要選擇最治本的方法啊，就照<code>Build the right image</code>的方法做吧，<br>在Dockerfile加上<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ARG USER_ID</span><br><span class="line">ARG GROUP_ID</span><br><span class="line"></span><br><span class="line">RUN addgroup --gid $GROUP_ID user</span><br><span class="line">RUN adduser --disabled-password --gecos &apos;&apos; --uid $USER_ID --gid $GROUP_ID user</span><br><span class="line">USER user</span><br></pre></td></tr></table></figure></p>
+<p>build image的時候加上參數<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t hexo --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) .</span><br></pre></td></tr></table></figure></p>
+<p>嗯嗯，ok啦<br>…? 怎麼有錯誤訊息<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">addgroup: The GID `1000&apos; is already in use.</span><br></pre></td></tr></table></figure></p>
+<p>原來是因為nodejs的image有個user <code>node</code>的uid和gid剛好在container外的我一樣，<br>不過這樣問題好像變簡單了，只要用比較治標的那個方法: <code>Set the Docker user when running your container</code><br>在docker run時多指定uid就行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --rm -e &quot;TZ=Asia/Taipei&quot; -v ~/blog:/home/blog --user &quot;$(id -u):$(id -g)&quot; hexo</span><br></pre></td></tr></table></figure></p>
+<p>終於收工了…</p>
+<p>不過還可以再偷懶一點，<br>在Dockerfile指定user<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">USER node</span><br></pre></td></tr></table></figure></p>
+<p>docker run時的指令就能更短啦。<br>都做到這步了，連timezone也寫死吧<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ENV TZ=Asia/Taipei</span><br><span class="line">RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime &amp;&amp; echo $TZ &gt; /etc/timezone</span><br></pre></td></tr></table></figure></p>
+<p>指令又可以更短啦<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it --rm -v ~/blog:/home/blog hexo new &lt;title&gt;</span><br></pre></td></tr></table></figure></p>
+<p>真的收工啦！大家可以回家了！！<br>(雖然我覺得每次都要map路徑很麻煩又寫了script…)</p>
+<p>沒想到我只是不想裝nodejs用docker偷懶，結果多做了很多事啊…</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/docker/" rel="tag"># docker</a>
+          
+            <a href="/tags/hexo/" rel="tag"># hexo</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/10/06/hello-travis-ci/" rel="next" title="Hello Travis CI">
+                <i class="fa fa-chevron-left"></i> Hello Travis CI
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/08/09/travis-ci-to-github-actions/" rel="prev" title="把Travis CI換成Github Actions">
+                把Travis CI換成Github Actions <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/avatars/ika.jpg" alt="plusku">
+            
+              <p class="site-author-name" itemprop="name">plusku</p>
+              <p class="site-description motion-element" itemprop="description">Taiwanese engineer</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/plusku" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">plusku</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
